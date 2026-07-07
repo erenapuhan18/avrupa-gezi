@@ -1,0 +1,1545 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: #0b132b;
+  color: #ffffff;
+  position: relative;
+}
+
+#bg-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.page-header {
+  padding: 32px 24px 16px;
+  text-align: center;
+}
+
+.page-header h1 {
+  margin: 0 0 8px;
+  font-size: 2rem;
+}
+
+.globe-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #c9d6df;
+}
+
+body.home-fullscreen {
+  overflow: hidden;
+  height: 100vh;
+}
+
+.overlay-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 5;
+  padding: 24px 24px 40px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(11, 19, 43, 0.85), transparent);
+}
+
+.globe-container {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+}
+
+.globe-container canvas {
+  display: block;
+}
+
+.globe-hint {
+  animation: hint-pulse 2s ease-in-out infinite;
+}
+
+/* Harita moduna geçince büyük başlık pinlerle çakışmasın */
+body.map-mode .overlay-header h1 {
+  display: none;
+}
+
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.65; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(4px); }
+}
+
+/* Düz harita üzerindeki ülke/şehir seçim pinleri */
+.map-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.map-pin {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.map-pin .pin-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ffd166;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 10px rgba(255, 209, 102, 0.85);
+  transition: transform 0.15s ease;
+}
+
+.map-pin .pin-label {
+  font-size: 0.78rem;
+  color: #ffffff;
+  background: rgba(11, 19, 43, 0.72);
+  padding: 2px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.map-pin.is-country .pin-dot {
+  width: 15px;
+  height: 15px;
+}
+
+/* Pasaporta eklenen şehir/ülke → yeşil nokta (küredeki yeşille uyumlu) */
+.map-pin.is-marked .pin-dot {
+  background: #5fdd87;
+  box-shadow: 0 0 9px rgba(95, 221, 135, 0.9);
+}
+
+.map-pin.is-country .pin-label {
+  font-weight: 600;
+}
+
+.map-pin:hover {
+  z-index: 10;
+}
+
+.map-pin:hover .pin-dot {
+  transform: scale(1.3);
+}
+
+.map-back {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 8;
+  pointer-events: auto;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+
+.map-back:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Harita arama kutusu (sağ üst) — yalnızca harita modunda görünür */
+.map-search {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 30;
+  width: 270px;
+  max-width: calc(100vw - 32px);
+  display: none;
+}
+
+body.map-mode .map-search {
+  display: block;
+}
+
+/* "Beni şaşırt" butonu — yalnızca dünya haritası (harita modu) ekranında */
+.surprise-btn {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  z-index: 7;
+  display: none;
+  padding: 12px 24px;
+  font-family: inherit;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #0b132b;
+  background: linear-gradient(135deg, #ffe08a, #ffd166);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 8px 26px rgba(255, 209, 102, 0.35), 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.surprise-btn:hover {
+  transform: translateX(-50%) translateY(-3px);
+  box-shadow: 0 12px 32px rgba(255, 209, 102, 0.5), 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.surprise-btn:disabled {
+  opacity: 0.85;
+  cursor: default;
+}
+
+body.map-mode .surprise-btn {
+  display: block;
+}
+
+body.route-mode .surprise-btn {
+  display: none;
+}
+
+.map-search input {
+  width: 100%;
+  padding: 11px 16px;
+  font-size: 0.95rem;
+  color: #ffffff;
+  background: rgba(11, 19, 43, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  outline: none;
+  backdrop-filter: blur(8px);
+}
+
+.map-search input::placeholder {
+  color: #aebbd6;
+}
+
+.map-search input:focus {
+  border-color: #ffd166;
+}
+
+.map-search-results {
+  margin-top: 8px;
+  background: rgba(11, 19, 43, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  overflow: hidden;
+  display: none;
+  backdrop-filter: blur(8px);
+}
+
+.map-search-results.open {
+  display: block;
+}
+
+.map-search-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  color: #ffffff;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.map-search-item:last-child {
+  border-bottom: 0;
+}
+
+.map-search-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.msi-name {
+  font-size: 0.95rem;
+}
+
+.msi-sub {
+  font-size: 0.78rem;
+  color: #ffd166;
+  white-space: nowrap;
+}
+
+/* ---------- Harita araç çubuğu + Rota planlayıcı ---------- */
+.map-tools {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 30;
+  display: none;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+}
+
+body.map-mode .map-tools {
+  display: flex;
+}
+
+.map-tool-btn {
+  padding: 10px 16px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #ffffff;
+  background: rgba(11, 19, 43, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.map-tool-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+body.route-mode .map-search {
+  display: none;
+}
+
+.route-svg {
+  position: fixed;
+  inset: 0;
+  z-index: 5; /* pinlerin (overlay z-index 6) altında kalsın */
+  pointer-events: none;
+}
+
+.route-path {
+  fill: none;
+  stroke: #ffd166;
+  stroke-width: 2.5;
+  stroke-dasharray: 7 7;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 5px rgba(255, 209, 102, 0.6));
+  animation: route-dash 1s linear infinite;
+}
+
+@keyframes route-dash {
+  to { stroke-dashoffset: -14; }
+}
+
+.route-node {
+  fill: #ffd166;
+}
+
+.route-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.rp-dot {
+  display: block;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.route-pin:hover .rp-dot {
+  transform: scale(1.45);
+  background: #ffffff;
+}
+
+.route-pin.in-route .rp-dot {
+  background: #ffd166;
+  border-color: #ffffff;
+  transform: scale(1.3);
+}
+
+.rp-num {
+  position: absolute;
+  top: -9px;
+  right: -9px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #0b132b;
+  background: #ffd166;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+}
+
+.route-pin.in-route .rp-num {
+  opacity: 1;
+}
+
+.rp-name {
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.72rem;
+  color: #ffffff;
+  background: rgba(11, 19, 43, 0.82);
+  padding: 1px 7px;
+  border-radius: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.route-pin:hover .rp-name,
+.route-pin.in-route .rp-name {
+  opacity: 1;
+}
+
+.route-panel {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 31;
+  width: min(92vw, 680px);
+  padding: 12px 16px;
+  color: #ffffff;
+  background: rgba(11, 19, 43, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  backdrop-filter: blur(10px);
+}
+
+.route-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.route-clear {
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.route-clear:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.route-hint {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: #aebbd6;
+}
+
+.route-list {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.route-step {
+  font-size: 0.82rem;
+  background: rgba(255, 209, 102, 0.16);
+  border: 1px solid rgba(255, 209, 102, 0.4);
+  color: #ffe6a8;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.route-arrow {
+  color: #ffd166;
+  font-weight: 700;
+}
+
+.route-total {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffd166;
+}
+
+/* ---------- Şehir kıyaslama modalı ---------- */
+.compare-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(4, 6, 15, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.compare-box {
+  width: min(94vw, 640px);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 20px 22px;
+  color: #ffffff;
+  background: rgba(11, 19, 43, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+}
+
+.compare-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.compare-header strong {
+  font-size: 1.15rem;
+}
+
+.compare-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.compare-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.compare-selects {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 8px;
+}
+
+.compare-sel {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+}
+
+.compare-sel option {
+  color: #111111;
+}
+
+.compare-vs {
+  font-weight: 700;
+  color: #ffd166;
+}
+
+.cmp-distance {
+  text-align: center;
+  margin: 16px 0 6px;
+  font-size: 0.95rem;
+  color: #dbe6ff;
+}
+
+.cmp-heads {
+  display: flex;
+  margin-top: 10px;
+}
+
+.cmp-head {
+  flex: 1;
+  text-align: center;
+}
+
+.cmp-city {
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.cmp-a-col .cmp-city {
+  color: #ffd166;
+}
+
+.cmp-b-col .cmp-city {
+  color: #5bd6c4;
+}
+
+.cmp-sub {
+  font-size: 0.8rem;
+  color: #aebbd6;
+}
+
+.cmp-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.cmp-cat {
+  min-width: 120px;
+  text-align: center;
+  font-size: 0.72rem;
+  color: #c7d3ec;
+}
+
+.cmp-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 14px;
+}
+
+.cmp-left {
+  justify-content: flex-end;
+}
+
+.cmp-right {
+  justify-content: flex-start;
+}
+
+.cmp-bar {
+  display: block;
+  height: 10px;
+  border-radius: 5px;
+}
+
+.cmp-bar-a {
+  background: #ffd166;
+}
+
+.cmp-bar-b {
+  background: #5bd6c4;
+}
+
+.cmp-count {
+  min-width: 10px;
+  font-size: 0.78rem;
+  color: #ffffff;
+}
+
+/* ---------- Pasaport & damga koleksiyonu ---------- */
+.passport-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(4, 6, 15, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.passport-box {
+  width: min(94vw, 680px);
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 20px 22px;
+  color: #ffffff;
+  background: rgba(11, 19, 43, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+}
+
+.passport-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.passport-header strong {
+  font-size: 1.15rem;
+}
+
+.passport-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.passport-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.passport-progress {
+  margin-top: 14px;
+  font-size: 0.95rem;
+  color: #dbe6ff;
+}
+
+.passport-bar {
+  margin-top: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.passport-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #5bd6c4, #ffd166);
+}
+
+.passport-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.passport-hint {
+  margin: 12px 0 0;
+  font-size: 0.82rem;
+  color: #aebbd6;
+}
+
+.stamp {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 12px;
+  text-align: left;
+  text-decoration: none;
+  font-family: inherit;
+  color: #ffffff;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.04);
+  opacity: 0.55;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.stamp:hover {
+  transform: translateY(-2px);
+}
+
+.stamp.stamped {
+  opacity: 1;
+  border-style: solid;
+  border-color: rgba(91, 214, 196, 0.6);
+  background: rgba(91, 214, 196, 0.12);
+}
+
+.stamp-city {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.stamp-country {
+  font-size: 0.75rem;
+  color: #aebbd6;
+}
+
+.stamp-mark {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #8a97b5;
+}
+
+.stamp.stamped .stamp-mark {
+  color: #5bd6c4;
+  font-weight: 600;
+}
+
+/* ---------- Foto-quiz "Burası neresi?" ---------- */
+.quiz-wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 90px 20px 60px;
+  text-align: center;
+  color: #ffffff;
+}
+
+.quiz-title {
+  font-size: 2rem;
+  margin: 0 0 6px;
+}
+
+.quiz-score {
+  margin: 0 0 18px;
+  color: #ffd166;
+  font-weight: 600;
+}
+
+.quiz-card {
+  padding: 16px;
+  background: rgba(11, 19, 43, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 18px;
+  backdrop-filter: blur(8px);
+}
+
+.quiz-photo {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0b132b center / cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quiz-loading {
+  color: #aebbd6;
+  font-size: 0.9rem;
+}
+
+.quiz-options {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.quiz-opt {
+  padding: 13px 14px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.quiz-opt:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.quiz-opt:disabled {
+  cursor: default;
+}
+
+.quiz-opt.correct {
+  background: rgba(91, 214, 196, 0.25);
+  border-color: #5bd6c4;
+}
+
+.quiz-opt.wrong {
+  background: rgba(255, 107, 107, 0.22);
+  border-color: #ff6b6b;
+}
+
+.quiz-feedback {
+  margin-top: 14px;
+  min-height: 22px;
+  font-weight: 600;
+}
+
+.quiz-feedback.ok {
+  color: #5bd6c4;
+}
+
+.quiz-feedback.no {
+  color: #ff8a8a;
+}
+
+.quiz-next {
+  margin-top: 12px;
+  padding: 11px 24px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0b132b;
+  background: #ffd166;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.quiz-next:hover {
+  background: #ffdc8a;
+}
+
+.back-link {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 20;
+  padding: 8px 15px;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 0.9rem;
+  background: rgba(11, 19, 43, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+
+.back-link:hover {
+  background: rgba(11, 19, 43, 0.8);
+}
+
+/* Sinematik hero başlık + parallax */
+.hero {
+  position: relative;
+  height: 72vh;
+  min-height: 420px;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  top: -20%;
+  left: 0;
+  width: 100%;
+  height: 140%;
+  background-size: cover;
+  background-position: center;
+  background-color: #14213d;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+  will-change: transform;
+}
+
+.hero-bg.loaded {
+  opacity: 1;
+}
+
+.weather-fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom,
+    rgba(11, 19, 43, 0.45) 0%,
+    rgba(11, 19, 43, 0.12) 35%,
+    rgba(11, 19, 43, 0.8) 82%,
+    #0b132b 100%);
+}
+
+.hero-content {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 13%;
+  padding: 0 24px;
+  text-align: center;
+  will-change: transform, opacity;
+}
+
+.hero-title {
+  margin: 0;
+  font-size: clamp(2.3rem, 6vw, 4.6rem);
+  letter-spacing: 1px;
+  text-shadow: 0 6px 36px rgba(0, 0, 0, 0.7);
+}
+
+.hero-sub {
+  margin: 12px 0 0;
+  font-size: 1.05rem;
+  color: #dbe6ff;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.65);
+}
+
+.hero-meta {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.hero-meta.is-ready {
+  opacity: 1;
+  transform: none;
+}
+
+.hero-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  font-size: 0.92rem;
+  color: #ffffff;
+  background: rgba(11, 19, 43, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+}
+
+.hero-clock .clock-time {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.5px;
+}
+
+.ss-launch {
+  margin-top: 18px;
+  padding: 11px 22px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0b132b;
+  background: #ffd166;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.ss-launch:hover {
+  transform: translateY(-2px);
+  background: #ffdc8a;
+}
+
+/* Ken Burns tam ekran slayt gösterisi */
+.slideshow {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: #04060f;
+  overflow: hidden;
+}
+
+body.slideshow-open {
+  overflow: hidden;
+}
+
+.ss-layer {
+  position: absolute;
+  inset: -2%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.3s ease;
+  will-change: transform, opacity;
+}
+
+.ss-layer.is-active {
+  opacity: 1;
+}
+
+.ss-layer.kb0 { animation: kb0 8s linear forwards; }
+.ss-layer.kb1 { animation: kb1 8s linear forwards; }
+.ss-layer.kb2 { animation: kb2 8s linear forwards; }
+.ss-layer.kb3 { animation: kb3 8s linear forwards; }
+
+@keyframes kb0 {
+  from { transform: scale(1.05) translate(0, 0); }
+  to { transform: scale(1.20) translate(-3%, -2%); }
+}
+@keyframes kb1 {
+  from { transform: scale(1.20) translate(2%, -2%); }
+  to { transform: scale(1.05) translate(0, 2%); }
+}
+@keyframes kb2 {
+  from { transform: scale(1.05) translate(-2%, 2%); }
+  to { transform: scale(1.22) translate(2%, 0); }
+}
+@keyframes kb3 {
+  from { transform: scale(1.20) translate(2%, 2%); }
+  to { transform: scale(1.05) translate(-2%, -2%); }
+}
+
+.ss-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.6) 100%),
+    linear-gradient(to top, rgba(0, 0, 0, 0.55), transparent 30%);
+}
+
+.ss-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 7%;
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
+.ss-controls {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  display: flex;
+  gap: 12px;
+}
+
+.ss-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(11, 19, 43, 0.6);
+  color: #ffffff;
+  font-size: 1rem;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background 0.15s ease;
+}
+
+.ss-btn:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.hero-scroll-hint {
+  display: inline-block;
+  margin-top: 22px;
+  font-size: 0.85rem;
+  color: #c9d6df;
+  animation: hint-pulse 2s ease-in-out infinite;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 24px;
+}
+
+/* Kategoriye göre gruplanmış yer listesi (şehir detay sayfası) */
+.photo-sections {
+  padding: 8px 24px 40px;
+}
+
+.category-section {
+  margin-top: 30px;
+}
+
+/* Pratik gezi rehberi kartı */
+.guide-card {
+  margin-top: 24px;
+  padding: 18px 20px;
+  background: rgba(11, 19, 43, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+}
+
+.guide-title {
+  margin: 0 0 14px;
+  font-size: 1.2rem;
+  color: #ffd166;
+}
+
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.guide-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}
+
+.guide-ico {
+  font-size: 1.4rem;
+}
+
+.guide-k {
+  font-size: 0.75rem;
+  color: #aebbd6;
+}
+
+.guide-v {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.category-title {
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  font-size: 1.3rem;
+  color: #ffd166;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.photo-grid-inner {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.photo-card {
+  background: #1c2541;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.photo-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-card-info {
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.photo-card-place {
+  font-size: 1rem;
+}
+
+.photo-card-credit {
+  font-size: 0.8rem;
+  color: #c9d6df;
+}
+
+.photo-card-credit a {
+  color: #9fd3ff;
+}
+
+.photo-card-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 220px;
+  padding: 16px;
+  text-align: center;
+}
+
+.error-message {
+  margin: 24px;
+  padding: 16px;
+  background: #5a1f1f;
+  color: #ffd6d6;
+  border-radius: 8px;
+}
+
+/* Tıklanabilir kart + foto sayısı rozeti */
+.photo-card {
+  position: relative;
+}
+
+.photo-card-clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.photo-card-clickable:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+
+.photo-count-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(11, 19, 43, 0.82);
+  color: #ffffff;
+  font-size: 0.72rem;
+  padding: 3px 9px;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+}
+
+/* Lightbox (tam ekran galeri) */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 8, 20, 0.93);
+  backdrop-filter: blur(5px);
+}
+
+.lightbox[hidden] {
+  display: none;
+}
+
+.lightbox-stage {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  max-width: 94vw;
+  max-height: 88vh;
+}
+
+.lightbox-figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.lightbox-img {
+  max-width: min(62vw, 1000px);
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.65);
+}
+
+/* Yan bilgi paneli (Vikipedi tarihçe/özellik) */
+.lightbox-info {
+  flex: 0 0 340px;
+  max-width: 360px;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 20px 22px;
+  color: #e8eefc;
+  background: rgba(18, 26, 50, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+}
+
+.lightbox-info-title {
+  margin: 0 0 12px;
+  font-size: 1.2rem;
+  color: #ffd166;
+}
+
+.lightbox-info-body {
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.lightbox-info-body.is-loading {
+  color: #9fb0d0;
+  font-style: italic;
+}
+
+.lightbox-info-link {
+  display: inline-block;
+  margin-top: 14px;
+  color: #9fd3ff;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.lightbox-info-link:hover {
+  text-decoration: underline;
+}
+
+.lightbox-caption {
+  color: #ffffff;
+  font-size: 0.95rem;
+  text-align: center;
+  max-width: min(62vw, 1000px);
+}
+
+@media (max-width: 880px) {
+  .lightbox-stage {
+    flex-direction: column;
+    gap: 12px;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+  .lightbox-img {
+    max-width: 92vw;
+    max-height: 56vh;
+  }
+  .lightbox-info {
+    flex: none;
+    width: 92vw;
+    max-width: 92vw;
+    max-height: 30vh;
+  }
+  .lightbox-caption {
+    max-width: 92vw;
+  }
+}
+
+.lightbox-caption strong {
+  font-size: 1.05rem;
+}
+
+.lightbox-caption a {
+  color: #9fd3ff;
+}
+
+.lightbox-counter {
+  color: #ffd166;
+  margin: 0 10px;
+}
+
+.lightbox-close {
+  position: fixed;
+  top: 16px;
+  right: 24px;
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 2.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.lightbox-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.lightbox-prev { left: 24px; }
+.lightbox-next { right: 24px; }
+
+.lightbox-nav:hover,
+.lightbox-close:hover {
+  color: #ffd166;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+body.lightbox-open {
+  overflow: hidden;
+}
+
+/* Scroll-reveal: görünür olunca alttan belirip kayar */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  will-change: opacity, transform;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* Telefon: araç çubuğu/butonları küçült, dokunmatik için sıkıştırma */
+@media (max-width: 600px) {
+  .map-tool-btn {
+    padding: 7px 11px;
+    font-size: 0.78rem;
+  }
+  .map-tools {
+    gap: 7px;
+  }
+  .surprise-btn {
+    bottom: 12px;
+    padding: 9px 16px;
+    font-size: 0.88rem;
+  }
+  .page-header h1 {
+    font-size: 0.85rem;
+    line-height: 1.3;
+  }
+  .overlay-header {
+    padding: 12px 12px 28px;
+  }
+  .route-panel {
+    bottom: 12px;
+  }
+
+  /* Harita pinleri: dar ekranda etiketler üst üste binmesin diye kompakt */
+  .map-pin .pin-label {
+    font-size: 0.62rem;
+    padding: 1px 5px;
+  }
+  .map-pin .pin-dot {
+    width: 9px;
+    height: 9px;
+  }
+  .map-pin.is-country .pin-dot {
+    width: 11px;
+    height: 11px;
+  }
+
+  /* Üst kısım: arama daralt, ipucu küçült (çakışmayı azalt) */
+  .map-search {
+    width: 150px;
+    top: 12px;
+    right: 12px;
+  }
+  .map-search input {
+    padding: 8px 12px;
+    font-size: 0.82rem;
+  }
+  .overlay-header {
+    padding: 14px 16px 30px;
+  }
+  .globe-hint {
+    font-size: 0.7rem;
+  }
+  /* Harita modunda ipucu solda kalsın, sağ üstteki aramayla çakışmasın */
+  body.map-mode .globe-hint {
+    max-width: 55%;
+    text-align: left;
+  }
+}

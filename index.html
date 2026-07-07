@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Avrupa'da Gezilecek En Güzel Yerler</title>
+  <link rel="stylesheet" href="style.css?v=19">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    #globe2{position:fixed;inset:0;z-index:2;background:#06080F;transition:opacity .6s ease}
+    #globe2.hidden{opacity:0;pointer-events:none}
+    #globe2 canvas{display:block}
+    #globe2-labels{position:fixed;inset:0;z-index:3;pointer-events:none;overflow:hidden;transition:opacity .6s ease}
+    #globe2-labels.hidden{opacity:0}
+    .citylabel{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;display:flex;align-items:center;gap:6px;font-family:system-ui,"Segoe UI",sans-serif;font-size:12.5px;font-weight:500;color:#E8F0F4;text-shadow:0 1px 6px rgba(0,0,0,.85);will-change:transform,opacity;transition:opacity .15s linear}
+    .citylabel::before{content:"";width:4px;height:4px;border-radius:50%;background:#7FF0E6;box-shadow:0 0 6px #7FF0E6;flex:none}
+    .citylabel.feat{color:#F2B65C;font-weight:600}
+    .citylabel.feat::before{background:#F2B65C;box-shadow:0 0 8px #F2B65C}
+
+    /* globe_2 metin katmanı (kapsanmış: yalnız #globe2-ui altında) */
+    #globe2-ui{position:fixed;inset:0;z-index:4;pointer-events:none;transition:opacity .6s ease;
+      --teal:#3FE0C5;--cyan:#7FF0E6;--amber:#F2B65C;--text:#F6F8FB;--muted:#9FB1C4;--ink:#06080F;
+      font-family:"Space Grotesk",system-ui,sans-serif;color:var(--text)}
+    #globe2-ui.hidden{opacity:0;pointer-events:none}
+    #globe2-ui .vignette{position:fixed;inset:0;pointer-events:none;
+      background:radial-gradient(120% 90% at 78% 50%, transparent 30%, rgba(6,8,15,.55) 78%, rgba(6,8,15,.92) 100%),
+                 linear-gradient(90deg, rgba(6,8,15,.85) 0%, rgba(6,8,15,.35) 38%, transparent 60%)}
+    #globe2-ui .hero{position:fixed;left:clamp(20px,4vw,52px);top:50%;transform:translateY(-50%);
+      max-width:min(560px,46vw);display:flex;flex-direction:column;gap:24px}
+    #globe2-ui .eyebrow{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.22em;color:var(--teal);text-transform:uppercase;display:flex;align-items:center;gap:10px}
+    #globe2-ui .eyebrow::before{content:"";width:26px;height:1px;background:var(--teal);opacity:.6}
+    #globe2-ui h1{font-family:"Fraunces",serif;font-weight:400;line-height:.98;letter-spacing:-.02em;font-size:clamp(40px,6vw,76px);margin:0;color:var(--text)}
+    #globe2-ui h1 em{font-style:italic;color:var(--teal)}
+    #globe2-ui .lede{font-size:clamp(15px,1.4vw,18px);line-height:1.6;color:var(--muted);max-width:46ch}
+    #globe2-ui .lede b{color:var(--text);font-weight:500}
+    #globe2-ui .story{border-left:2px solid var(--amber);padding:4px 0 4px 16px;min-height:46px;display:flex;flex-direction:column;gap:3px}
+    #globe2-ui .story .city{font-family:"Space Mono",monospace;font-size:13px;letter-spacing:.12em;color:var(--amber);text-transform:uppercase;transition:opacity .22s ease}
+    #globe2-ui .story .blurb{font-size:14.5px;color:var(--text);line-height:1.4;transition:opacity .22s ease}
+    #globe2-ui .stats{display:flex;gap:clamp(20px,3vw,44px)}
+    #globe2-ui .stat .n{font-family:"Fraunces",serif;font-size:clamp(26px,3.2vw,38px);line-height:1}
+    #globe2-ui .stat .l{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-top:8px}
+    #globe2-ui .cta-row{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+    #globe2-ui .cta{pointer-events:auto;appearance:none;border:0;cursor:pointer;font-family:"Space Grotesk";font-weight:600;font-size:15px;color:#0A0E1A;background:var(--amber);padding:15px 26px;border-radius:999px;display:inline-flex;gap:10px;align-items:center;transition:transform .18s,box-shadow .18s}
+    #globe2-ui .cta:hover{transform:translateY(-2px);box-shadow:0 14px 34px -10px rgba(242,182,92,.6)}
+    #globe2-ui .ghost{pointer-events:auto;background:none;border:0;cursor:pointer;color:var(--muted);font:inherit;font-size:14px;display:inline-flex;gap:7px;align-items:center;padding:6px 2px;transition:color .2s}
+    #globe2-ui .ghost:hover{color:var(--text)}
+    #globe2-ui .legend{position:fixed;left:clamp(20px,4vw,52px);bottom:26px;display:flex;gap:22px;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.1em;color:var(--muted)}
+    #globe2-ui .legend span{display:flex;align-items:center;gap:8px}
+    #globe2-ui .dot{width:8px;height:8px;border-radius:50%}
+    #globe2-ui .caption{position:fixed;right:clamp(20px,4vw,52px);bottom:26px;text-align:right;font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.06em;color:rgba(159,177,196,.55);line-height:1.7}
+    /* globe modunda eski site başlığı gizli; haritaya geçince geri gelir */
+    .overlay-header{transition:opacity .5s ease}
+    body:not(.map-mode) .overlay-header{opacity:0;pointer-events:none}
+    @media (max-width:820px){
+      #globe2-ui .hero{top:auto;bottom:112px;transform:none;max-width:none;left:20px;right:20px;gap:16px}
+      #globe2-ui .vignette{background:linear-gradient(180deg, transparent 30%, rgba(6,8,15,.6) 62%, var(--ink) 100%)}
+      #globe2-ui .caption{display:none}
+      #globe2-ui .legend{bottom:16px}
+    }
+  </style>
+</head>
+<body class="home-fullscreen">
+  <header class="page-header overlay-header">
+    <h1>Avrupa'da Gezilecek En Güzel Yerler</h1>
+    <p class="globe-hint" id="globe-hint">Keşfetmek için aşağı kaydır ⌄</p>
+  </header>
+
+  <div id="globe-container" class="globe-container"></div>
+  <div id="globe2"></div>
+  <div id="globe2-labels"></div>
+  <div id="globe2-ui">
+    <div class="vignette"></div>
+    <header class="hero">
+      <div class="eyebrow">Kültür ağı · canlı</div>
+      <h1>Her yerin bir<br><em>hikâyesi</em> var.</h1>
+      <p class="lede">Fikirlerin, müziğin ve tasarımın şehirler arasında nasıl dolaştığını izle. <b>168 rota</b> her gece açık kültür verisinden yeniden çiziliyor.</p>
+      <div class="story" id="story" aria-live="polite">
+        <div class="city" id="storyCity">İstanbul</div>
+        <div class="blurb" id="storyBlurb">Kahvehane kültürü buradan dünyaya açıldı, 1554.</div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="n">112</div><div class="l">Şehir</div></div>
+        <div class="stat"><div class="n">168</div><div class="l">Aktif rota</div></div>
+        <div class="stat"><div class="n">6</div><div class="l">Kıta</div></div>
+      </div>
+      <div class="cta-row">
+        <button class="cta" id="g2-explore">Haritayı keşfet
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h9M8 4l4 4-4 4" stroke="#0A0E1A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="ghost">Nasıl çalışır ↗</button>
+      </div>
+    </header>
+    <div class="legend">
+      <span><span class="dot" style="background:#3FE0C5;box-shadow:0 0 8px #3FE0C5"></span>Canlı rota</span>
+      <span><span class="dot" style="background:#F2B65C;box-shadow:0 0 8px #F2B65C"></span>Öne çıkan şehir</span>
+    </div>
+    <div class="caption">Eşdörtgen → ortografik<br>112 düğüm · canlı</div>
+  </div>
+  <div id="map-overlay" class="map-overlay"></div>
+
+  <div id="map-search" class="map-search">
+    <input id="map-search-input" type="text" placeholder="Ülke veya şehir ara…" autocomplete="off">
+    <div id="map-search-results" class="map-search-results"></div>
+  </div>
+
+  <button id="surprise-btn" class="surprise-btn">🎲 Beni şaşırt</button>
+
+  <script src="background.js?v=9"></script>
+  <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+  <script src="cities.js?v=6"></script>
+  <script src="visited.js?v=2"></script>
+  <script src="globe.js?v=16"></script>
+  <script src="globe2.js?v=1"></script>
+  <script src="map.js?v=14"></script>
+  <script src="intro.js?v=9"></script>
+</body>
+</html>

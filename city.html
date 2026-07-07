@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Şehir Detayı - Avrupa Gezi</title>
+  <link rel="stylesheet" href="style.css?v=19">
+</head>
+<body>
+  <a href="index.html" class="back-link" onclick="try{sessionStorage.setItem('avrupa_return_map','1')}catch(e){}">&larr; Haritaya dön</a>
+
+  <section class="hero" id="hero">
+    <div class="hero-bg" id="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content" id="hero-content">
+      <h1 class="hero-title" id="hero-title"></h1>
+      <p class="hero-sub" id="hero-sub"></p>
+      <div class="hero-meta" id="hero-meta"></div>
+      <button class="ss-launch" id="ss-launch" hidden>▶ Slayt gösterisi</button>
+      <span class="hero-scroll-hint">aşağı kaydır ⌄</span>
+    </div>
+  </section>
+
+  <main id="photo-grid" class="photo-sections"></main>
+
+  <script src="background.js?v=9"></script>
+  <script src="cities.js?v=6"></script>
+  <script src="visited.js?v=2"></script>
+  <script src="guides.js?v=1"></script>
+  <script src="lib.js?v=7"></script>
+  <script src="photos.js?v=6"></script>
+  <script src="detail.js?v=15"></script>
+</body>
+</html>
